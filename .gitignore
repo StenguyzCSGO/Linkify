@@ -1,0 +1,25 @@
+# Ignorer les fichiers sensibles ou inutiles
+.env
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.DS_Store
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# OAuth
+oauth.json
