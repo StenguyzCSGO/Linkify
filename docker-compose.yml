@@ -1,0 +1,14 @@
+services:
+  dev:
+    image: rust:1.87-slim
+    volumes:
+      - .:/usr/src/linkify
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/usr/src/linkify/target
+    working_dir: /usr/src/linkify
+    command: bash
+    tty: true
+
+volumes:
+  cargo-cache:
+  target-cache:
