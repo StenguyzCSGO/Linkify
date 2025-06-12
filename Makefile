@@ -5,4 +5,4 @@ build:
 	docker build -t linkify .
 
 run:
-	docker run --rm linkify
+	docker run --rm --env-file .env linkify
