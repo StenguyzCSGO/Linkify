@@ -1,6 +1,8 @@
 services:
   dev:
     image: rust:1.87-slim
+    env_file:
+      - .env
     volumes:
       - .:/usr/src/linkify
       - cargo-cache:/usr/local/cargo/registry

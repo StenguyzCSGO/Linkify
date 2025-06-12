@@ -2,9 +2,12 @@
 
 ## Usage
 
-Use the `make` commands below to simplify development and production release.
+Use the following `make` commands to simplify development and production release:
 
+- `make up` : Start the development Docker container and build the project in release mode.
+- `make sh` : Open a shell inside the development Docker container.
+- `make check` : Run `cargo check` inside the development Docker container to verify the code.
+- `make run` : Run the project in release mode inside the development Docker container.
+- `make down` : Stop and remove the development Docker container.
 
-- `make dev` : Build the dependencies once, then get a Docker shell to rebuild on every change.
-- `make build` : Build the project in release mode using the customized Docker image.
-- `make run` : Run the binary previously built with `make build` in an optimized Docker image.
+These commands help you manage the Docker-based Rust development environment
