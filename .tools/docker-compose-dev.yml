@@ -2,14 +2,13 @@ services:
   dev:
     image: rust:1.87-slim
     env_file:
-      - .env
+      - ../.env
     volumes:
-      - .:/usr/src/linkify
+      - ../:/usr/src/linkify
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/usr/src/linkify/target
     working_dir: /usr/src/linkify
-    command: bash
-    tty: true
+    command: sleep infinity
 
 volumes:
   cargo-cache:
