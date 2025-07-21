@@ -7,3 +7,4 @@ edition = "2024"
 dotenv = "0.15.0"
 serenity = "0.12.4"
 tokio = { version = "1.46.1", features = ["full"] }
+poise = "0.6.1"
