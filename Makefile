@@ -1,8 +1,20 @@
-dev:
-	docker-compose -f docker-compose.yml run dev
+DEV_COMPOSE_FILE=.tools/docker-compose-dev.yml
 
-build:
-	docker build -t linkify .
+up:
+	docker compose -f $(DEV_COMPOSE_FILE) up -d --remove-orphans
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo build --release
+
+sh:
+	docker compose -f $(DEV_COMPOSE_FILE) exec -it dev bash
+
+check:
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo check
 
 run:
-	docker run --rm --env-file .env linkify
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo run --release
+
+clean:
+	cargo clean
+
+down:
+	docker compose -f $(DEV_COMPOSE_FILE) down
