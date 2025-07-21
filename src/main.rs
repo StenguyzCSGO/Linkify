@@ -17,13 +17,15 @@ async fn main() {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             commands: vec![
-                commands::ping::ping()
+                commands::ping::ping(),
+                commands::klod::klod()
             ],
             ..Default::default()
         })
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
-                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                let guild_id = serenity::GuildId::new(693058016898973736);
+                poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id).await?;
                 Ok(Data {})
             })
         })
