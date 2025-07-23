@@ -16,5 +16,9 @@ run:
 clean:
 	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo clean
 
+fmt:
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev rustup component add rustfmt --toolchain nightly
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo +nightly fmt	
+
 down:
 	docker compose -f $(DEV_COMPOSE_FILE) down
