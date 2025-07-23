@@ -4,7 +4,7 @@ use poise::serenity_prelude as serenity;
 use dotenv::dotenv;
 use std::env;
 
-struct Data {}
+struct Data {} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -26,12 +26,13 @@ async fn main() {
             ..Default::default()
         })
         .setup(move |ctx, _ready, framework| {
-            let guild_id = guild_id.clone();
             Box::pin(async move {
                 if let Some(guild_id) = guild_id {
                     poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id).await?;
+                    println!("Development mode");
                 } else {
                     poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                    println!("Production mode");
                 }
                 Ok(Data {})
             })
@@ -41,5 +42,12 @@ async fn main() {
     let client = serenity::ClientBuilder::new(discord_token, intents)
         .framework(framework)
         .await;
-    client.expect("Failed to create Serenity client").start().await.expect("Failed to start Serenity client");
+
+    match client {
+        Ok(mut client) => match client.start().await {
+            Ok(_) => (),
+            Err(e) => eprintln!("Failed to start Serenity Client: {}", e),
+        },
+        Err(e) => eprintln!("Failed to create Serenity Client: {}", e),
+    }
 }
