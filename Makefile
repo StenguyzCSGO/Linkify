@@ -14,7 +14,7 @@ run:
 	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo run --release
 
 clean:
-	cargo clean
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo clean
 
 down:
 	docker compose -f $(DEV_COMPOSE_FILE) down
