@@ -1,21 +1,15 @@
 use base64::{Engine as _, engine::general_purpose};
+use once_cell::sync::Lazy;
 use reqwest;
 use serde::Deserialize;
 use std::env;
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use crate::Error;
 use crate::types::TrackInfo;
 
-fn extract_track_id(url: &str) -> Option<String> {
-    let track_part = url.split("/track/").nth(1)?;
-    let track_id = track_part.split('?').next()?.split('/').next()?.to_string();
-
-    if !track_id.is_empty() {
-        Some(track_id)
-    } else {
-        None
-    }
-}
+static SPOTIFY_TOKEN: Lazy<Mutex<Option<SpotifyToken>>> = Lazy::new(|| Mutex::new(None));
 
 #[derive(Deserialize, Debug)]
 struct SpotifyTokenResponse {
@@ -30,13 +24,61 @@ struct SpotifyToken {
     created_at: Instant,
 }
 
+#[derive(Deserialize, Debug)]
+struct SpotifyTrack {
+    name: String,
+    artists: Vec<SpotifyArtists>,
+    album: SpotifyAlbum,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifyArtists {
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifyAlbum {
+    name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifySearchTrack {
+    external_urls: SpotifyExternalUrls,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifyExternalUrls {
+    spotify: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifySearchTracks {
+    items: Vec<SpotifySearchTrack>,
+}
+
+#[derive(Deserialize, Debug)]
+struct SpotifySearchResponse {
+    tracks: SpotifySearchTracks,
+}
+
+fn extract_track_id(url: &str) -> Option<String> {
+    let track_part = url.split("/track/").nth(1)?;
+    let track_id = track_part.split('?').next()?.split('/').next()?.to_string();
+
+    if !track_id.is_empty() {
+        Some(track_id)
+    } else {
+        None
+    }
+}
+
 impl SpotifyToken {
     fn is_valid(&self) -> bool {
         self.created_at.elapsed() < Duration::from_secs(self.expires_in)
     }
 }
 
-async fn get_access_token() -> Result<SpotifyToken, Box<dyn std::error::Error + Send + Sync>> {
+async fn get_access_token() -> Result<SpotifyToken, Error> {
     let client_id = env::var("SPOTIFY_CLIENT_ID")?;
     let client_secret = env::var("SPOTIFY_CLIENT_SECRET")?;
     let auth = format!("{}:{}", client_id, client_secret);
@@ -59,29 +101,67 @@ async fn get_access_token() -> Result<SpotifyToken, Box<dyn std::error::Error + 
     })
 }
 
-pub async fn get_track_info(
-    _url: &str,
-) -> Result<TrackInfo, Box<dyn std::error::Error + Send + Sync>> {
-    if !token.is_valid() {
-        get_access_token();
+async fn get_access_token_cached() -> Result<String, Error> {
+    {
+        let token_guard = SPOTIFY_TOKEN.lock().unwrap();
+        if let Some(token) = token_guard.as_ref() {
+            if token.is_valid() {
+                return Ok(token.access_token.clone());
+            }
+        }
     }
+    let new_token = get_access_token().await?;
+    let access_token = new_token.access_token.clone();
+    let mut token_guard = SPOTIFY_TOKEN.lock().unwrap();
+    *token_guard = Some(new_token);
+    Ok(access_token)
+}
+
+pub async fn get_track_info(_url: &str) -> Result<TrackInfo, Error> {
     let track_id = extract_track_id(_url).ok_or("Invalid Spotify track URL")?;
-    let access_token = get_access_token().await?;
+    let access_token = get_access_token_cached().await?;
     let client = reqwest::Client::new();
 
     let url = format!("https://api.spotify.com/v1/tracks/{}", track_id);
-    let response = client.get(&url).bearer_auth(access_token).send().await?;
+    let res = client.get(&url).bearer_auth(&access_token).send().await?;
 
-    // TODO: Parse response into TrackInfo
+    let track: SpotifyTrack = res.json().await?;
+    let artists = track
+        .artists
+        .iter()
+        .map(|a| a.name.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
+
     Ok(TrackInfo {
-        title: "Imagine".to_string(),
-        artist: "John Lennon".to_string(),
-        album: Some("Imagine".to_string()),
+        original_platform: "Spotify".to_string(),
+        title: track.name,
+        artist: artists,
+        album: Some(track.album.name),
     })
 }
 
-pub async fn get_track_link(_info: &TrackInfo) -> Option<String> {
-    // You can generate a Spotify track link from the TrackInfo if you store the track ID.
-    // For now, return None or a placeholder.
-    None
+pub async fn get_track_link(info: &TrackInfo) -> Option<String> {
+    let access_token = get_access_token_cached().await.ok()?;
+
+    let url = format!(
+        "https://api.spotify.com/v1/search?q=track:\"{}\" artist:\"{}\"&type=track&limit=1",
+        info.title, info.artist
+    );
+
+    let client = reqwest::Client::new();
+    let res = client
+        .get(&url)
+        .bearer_auth(&access_token)
+        .send()
+        .await
+        .ok()?;
+
+    let search_result: SpotifySearchResponse = res.json().await.ok()?;
+
+    search_result
+        .tracks
+        .items
+        .first()
+        .map(|track| track.external_urls.spotify.clone())
 }
