@@ -2,6 +2,7 @@ DEV_COMPOSE_FILE=.tools/docker-compose-dev.yml
 
 up:
 	docker compose -f $(DEV_COMPOSE_FILE) up -d --remove-orphans
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev rustup component add rustfmt --toolchain nightly
 	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo build --release
 
 sh:
@@ -15,6 +16,9 @@ run:
 
 clean:
 	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo clean
+
+fmt:
+	docker compose -f $(DEV_COMPOSE_FILE) exec dev cargo +nightly fmt	
 
 down:
 	docker compose -f $(DEV_COMPOSE_FILE) down

@@ -1,7 +1,9 @@
 mod commands;
+mod platforms;
+mod types;
 
-use poise::serenity_prelude as serenity;
 use dotenv::dotenv;
+use poise::serenity_prelude as serenity;
 use std::env;
 
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -20,15 +22,18 @@ async fn main() {
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![
-                commands::ping::ping()
-            ],
+            commands: vec![commands::ping::ping(), commands::convert::convert()],
             ..Default::default()
         })
         .setup(move |ctx, _ready, framework| {
             Box::pin(async move {
                 if let Some(guild_id) = guild_id {
-                    poise::builtins::register_in_guild(ctx, &framework.options().commands, guild_id).await?;
+                    poise::builtins::register_in_guild(
+                        ctx,
+                        &framework.options().commands,
+                        guild_id,
+                    )
+                    .await?;
                     println!("Development mode");
                 } else {
                     poise::builtins::register_globally(ctx, &framework.options().commands).await?;
