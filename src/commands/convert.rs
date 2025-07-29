@@ -10,7 +10,8 @@ pub async fn convert(
         match handler.get_track_info(&url).await {
             Ok(track_info) => {
                 let mut final_links = Vec::new();
-                for platform in PlatformHandler::all_platforms() {
+                let all_platforms = PlatformHandler::all_platforms();
+                for platform in &all_platforms {
                     if platform.name() != track_info.original_platform {
                         if let Some(link) = platform.get_track_link(&track_info).await {
                             final_links.push(link);
@@ -20,7 +21,7 @@ pub async fn convert(
                 let links_str = if final_links.is_empty() {
                     "No links found on other platforms for this music.".to_string()
                 } else {
-                    PlatformHandler::all_platforms()
+                    all_platforms
                         .into_iter()
                         .filter(|p| p.name() != track_info.original_platform)
                         .zip(final_links.iter())
