@@ -85,13 +85,15 @@ async fn get_access_token() -> Result<SpotifyToken, Error> {
     let b64_auth = general_purpose::STANDARD.encode(auth);
 
     let client = reqwest::Client::new();
+    
     let res = client
         .post("https://accounts.spotify.com/api/token")
         .header("Authorization", format!("Basic {}", b64_auth))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body("grant_type=client_credentials")
         .send()
-        .await?;
+        .await
+        .map_err(|e| format!("Spotify token request failed: {}", e))?;
 
     let token: SpotifyTokenResponse = res.json().await?;
     Ok(SpotifyToken {
