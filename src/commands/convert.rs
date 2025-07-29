@@ -30,13 +30,14 @@ pub async fn convert(
                 };
 
                 ctx.say(format!(
-                    "🎵 **{}** by **{}**{}\nOriginal link:\n<{}>\n\nConverted links:\n{}",
+                    "🎵 **{}** by **{}**{}\nOriginal link :\n{}: <{}>\n\nConverted links:\n{}",
                     track_info.title,
                     track_info.artist,
                     track_info
                         .album
                         .map(|a| format!(" ({})", a))
                         .unwrap_or_default(),
+                    track_info.original_platform,
                     url,
                     links_str
                 ))
