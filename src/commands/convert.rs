@@ -45,7 +45,7 @@ pub async fn convert(
                 .await?;
             }
             Err(e) => {
-                ctx.say(format!("❌ Error: {}", e)).await?;
+                ctx.say(format!("❌ Error: {:?}", e)).await?;
             }
         }
     } else {

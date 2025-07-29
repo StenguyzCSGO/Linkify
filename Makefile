@@ -29,4 +29,4 @@ prod:
 	docker build -f $(PROD_DOCKER_FILE) -t linkify-prod .
 	-docker stop linkify-prod
 	-docker rm linkify-prod
-	docker run -d --restart unless-stopped --name linkify-prod -p 8080:8080 linkify-prod
+	docker run -d --restart unless-stopped --name linkify-prod --env-file .env -p 8080:8080 linkify-prod
