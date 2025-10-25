@@ -1,6 +1,7 @@
 mod commands;
 mod platforms;
 mod types;
+mod utils;
 
 use dotenv::dotenv;
 use poise::serenity_prelude as serenity;
