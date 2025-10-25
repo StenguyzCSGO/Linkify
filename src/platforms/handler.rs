@@ -7,25 +7,20 @@ use super::{deezer, spotify};
 pub enum PlatformHandler {
     Spotify,
     Deezer,
+    YouTubeMusic,
 }
 
 impl PlatformHandler {
+    /// Retourne toutes les plateformes dans un ordre alphabétique fixe
     pub fn all_platforms() -> Vec<Self> {
-        vec![Self::Spotify, Self::Deezer]
-    }
-
-    pub fn from_name(name: &str) -> Option<Self> {
-        match name {
-            "Spotify" => Some(Self::Spotify),
-            "Deezer" => Some(Self::Deezer),
-            _ => None,
-        }
+        vec![Self::Deezer, Self::Spotify, Self::YouTubeMusic]
     }
 
     pub fn name(&self) -> &'static str {
         match self {
             Self::Spotify => "Spotify",
             Self::Deezer => "Deezer",
+            Self::YouTubeMusic => "YouTube Music",
         }
     }
 
@@ -39,10 +34,15 @@ impl PlatformHandler {
         None
     }
 
+    pub fn is_coming_soon(&self) -> bool {
+        matches!(self, Self::YouTubeMusic)
+    }
+
     pub async fn get_track_info(&self, url: &str) -> Result<TrackInfo, Error> {
         match self {
             Self::Spotify => spotify::get_track_info(url).await,
             Self::Deezer => deezer::get_track_info(url).await,
+            Self::YouTubeMusic => Err("YouTube Music is coming soon".into()),
         }
     }
 
@@ -50,6 +50,7 @@ impl PlatformHandler {
         match self {
             Self::Spotify => spotify::get_track_link(info).await,
             Self::Deezer => deezer::get_track_link(info).await,
+            Self::YouTubeMusic => None,
         }
     }
 }

@@ -11,7 +11,6 @@ struct DeezerSearchResponse {
 
 #[derive(Deserialize, Debug)]
 struct DeezerTrack {
-    id: u64,
     title: String,
     link: String,
     artist: DeezerArtist,
